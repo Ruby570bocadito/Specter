@@ -1,0 +1,47 @@
+# T-100AI + Ollama local
+# docker compose up -d
+# docker compose exec t100ai python -m t100ai.cli.main
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: t100ai-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  t100ai:
+    build: .
+    container_name: t100ai
+    depends_on:
+      - ollama
+    environment:
+      - T100AI_OLLAMA_HOST=http://ollama:11434
+      - T100AI_DATA_DIR=/app
+    volumes:
+      - t100ai_sessions:/app/sessions
+      - t100ai_output:/app/output
+    stdin_open: true
+    tty: true
+    ports:
+      - "8080:8080"
+    networks:
+      - t100ai_net
+
+volumes:
+  ollama_data:
+  t100ai_sessions:
+  t100ai_output:
+
+networks:
+  t100ai_net:
+    driver: bridge

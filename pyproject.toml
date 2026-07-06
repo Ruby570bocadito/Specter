@@ -1,0 +1,94 @@
+[project]
+name = "t100ai"
+version = "0.1.0"
+description = "T-100AI - AI-Powered Offensive Security Terminal"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "T-100AI Team"}
+]
+keywords = ["security", "pentesting", "ai", "llm", "cybersecurity", "t100ai"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Topic :: Security",
+]
+
+dependencies = [
+    "rich>=13.7.0",
+    "typer>=0.9.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.0.0",
+    "structlog>=24.1.0",
+    "python-dotenv>=1.0.0",
+    "click>=8.1.0",
+    "prompt_toolkit>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+]
+ollama = [
+    "ollama>=0.1.0",
+]
+export = [
+    "weasyprint>=60.0",
+    "python-docx>=1.0.0",
+]
+workflows = [
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+t100ai = "t100ai.cli.main:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/t100ai"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+exclude = ["__pycache__/", "*.pyc"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = [
+    "F841",  # unused variable
+    "F401",  # unused import
+    "F821",  # undefined name (pre-existing TYPE_CHECKING issues)
+    "E402",  # module level import not at top
+    "E501",  # line too long
+    "E722",  # bare except
+    "W293",  # blank line contains whitespace
+    "F811",  # redefined unused
+]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = [
+    "--cov=t100ai",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "-v",
+]
