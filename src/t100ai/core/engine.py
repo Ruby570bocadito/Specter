@@ -51,9 +51,9 @@ class T100AIEngine:
         self._last_generated_code: Optional[dict] = None
         self._cancel_requested = False
         self._permission_manager = PermissionManager(current_level=PermissionLevel.OBSERVATION)
-        self._audit_logger = AuditLogger(path="src/specter/log/audit.log")
+        self._audit_logger = AuditLogger(path="src/t100ai/log/audit.log")
         try:
-            setup_logging(level="INFO", log_file="src/specter/log/specter.log", json_output=True)
+            setup_logging(level="INFO", log_file="src/t100ai/log/specter.log", json_output=True)
         except Exception:
             pass
         

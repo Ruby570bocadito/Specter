@@ -25,7 +25,20 @@ class AuditLogger:
         os.makedirs(self.log_dir, exist_ok=True)
         self.log_path = os.path.join(self.log_dir, "audit.log")
         self.sig_path = os.path.join(self.log_dir, "audit.sig")
-        self._hmac_secret = secret or os.environ.get("T100AI_AUDIT_SECRET", "default-secret-change-me")
+        if secret:
+            self._hmac_secret = secret
+        elif os.environ.get("T100AI_AUDIT_SECRET"):
+            self._hmac_secret = os.environ["T100AI_AUDIT_SECRET"]
+        else:
+            import secrets as _secrets
+            import warnings as _warnings
+            self._hmac_secret = _secrets.token_hex(32)
+            _warnings.warn(
+                "T100AI_AUDIT_SECRET not set; using an ephemeral random secret. "
+                "Audit-log integrity will NOT be verifiable across runs.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
     def _read_all(self) -> List[Dict[str, Any]]:
         if not os.path.exists(self.log_path):

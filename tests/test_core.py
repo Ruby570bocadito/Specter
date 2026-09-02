@@ -59,10 +59,10 @@ class TestT100AIConfig:
     def test_default_config(self):
         """Test configuración por defecto"""
         import os
-        os.environ["OLLAMA_MODEL"] = "devstral-small-2:latest"
+        os.environ["OLLAMA_MODEL"] = "mistral:7b"
         config = T100AIConfig()
         assert config.ollama_host == "http://localhost:11434"
-        assert config.ollama_model == "devstral-small-2:latest"
+        assert config.ollama_model == "mistral:7b"
         assert config.llm_enabled is True
         assert config.permission_mode == "standard"
         del os.environ["OLLAMA_MODEL"]
@@ -187,7 +187,7 @@ def sample_session():
 def sample_config():
     """Fixture de configuración de ejemplo"""
     import os
-    os.environ["OLLAMA_MODEL"] = "devstral-small-2:latest"
+    os.environ["OLLAMA_MODEL"] = "mistral:7b"
     os.environ["LLM_ENABLED"] = "false"
     os.environ["PERMISSION_MODE"] = "standard"
     cfg = T100AIConfig()

@@ -54,10 +54,11 @@ class CommandSandbox:
         r'\brm\s+(-rf|--recursive.*-f|-f.*--recursive|--no-preserve-root)\s+/$',
         r'\brm\s+(-r\s+-f|-f\s+-r)\s+/$',
         r'\brm\s+(-rf|--no-preserve-root)\s+/$',
-        r'\bdd\s+if=/dev/(zero|urandom|random)\s+of=/dev/sd',
-        r'\bdd\s+of=/dev/sd',
-        r'\bmkfs\.\w+\s+/dev/sd',
-        r'>\s*/dev/sd[a-z]',
+        r'\bdd\s+if=/dev/(zero|urandom|random)\s+of=/dev/(sd|hd|vd|xvd|nvme|mmcblk)',
+        r'\bdd\s+of=/dev/(sd|hd|vd|xvd|nvme|mmcblk)',
+        r'\bmkfs\.\w+\s+/dev/(sd|hd|vd|xvd|nvme|mmcblk)',
+        r'>\s*/dev/(sd|hd|vd|xvd|nvme|mmcblk)\w*',
+        r'\b(sgdisk\s+--?zap-all|wipefs\s+-a\s+/dev/|blkdiscard\s+/dev/)',
         # Fork bombs
         r':\(\)\{:\|:&\};:',
         r'\b:\s*\{\s*:\s*\|\s*:\s*&\s*\}\s*;',
@@ -233,7 +234,11 @@ class CommandSandbox:
         return True, "OK"
 
     def _is_rm_rf_root(self, command: str) -> bool:
-        """Semantic check for rm -rf / with any flag ordering."""
+        """Semantic check for rm -rf targeting the filesystem root.
+
+        Catches any flag ordering plus globs (``/*``) and path traversal
+        that normalizes back to ``/`` (e.g. ``/home/../..``).
+        """
         import shlex
         try:
             parts = shlex.split(command)
@@ -243,17 +248,25 @@ class CommandSandbox:
             return False
         has_r = False
         has_f = False
-        target_is_root = False
-        for i, part in enumerate(parts[1:], 1):
+        targets: list[str] = []
+        for part in parts[1:]:
             if part.startswith("-"):
                 flags = part.lstrip("-")
                 if "r" in flags or "R" in flags:
                     has_r = True
                 if "f" in flags:
                     has_f = True
-            elif part == "/":
-                target_is_root = True
-        return has_r and has_f and target_is_root
+            else:
+                targets.append(part)
+        if not (has_r and has_f):
+            return False
+        for target in targets:
+            if target in ("/", "/*", "/.", "/.."):
+                return True
+            # Normalize paths that resolve back to root (e.g. /home/../..)
+            if target.startswith("/") and os.path.normpath(target) == "/":
+                return True
+        return False
 
     def requires_confirmation(self, command: str) -> bool:
         """Determina si requiere confirmación del usuario."""

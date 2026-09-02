@@ -2,23 +2,32 @@
 
 from pathlib import Path
 from typing import Optional, Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AliasChoices
 from pydantic_settings import BaseSettings
 import os
 
 
 class T100AIConfig(BaseSettings):
-    """Configuración principal de T-100AI"""
+    """Configuración principal de T-100AI
+
+    Acepta dos prefijos de variables de entorno por compatibilidad:
+    ``OLLAMA_HOST``/``T100AI_OLLAMA_HOST``, ``OLLAMA_MODEL``/``T100AI_OLLAMA_MODEL``,
+    etc. (el README y el Dockerfile usan el prefijo ``T100AI_``).
+    """
     
     # LLM Configuration
-    ollama_host: str = Field(default="http://localhost:11434", alias="OLLAMA_HOST")
-    ollama_model: str = Field(default="devstral-small-2:latest", alias="OLLAMA_MODEL")
-    llm_enabled: bool = Field(default=True, alias="LLM_ENABLED")
+    ollama_host: str = Field(default="http://localhost:11434",
+                             validation_alias=AliasChoices("OLLAMA_HOST", "T100AI_OLLAMA_HOST"))
+    ollama_model: str = Field(default="mistral:7b",
+                              validation_alias=AliasChoices("OLLAMA_MODEL", "T100AI_OLLAMA_MODEL"))
+    llm_enabled: bool = Field(default=True,
+                              validation_alias=AliasChoices("LLM_ENABLED", "T100AI_LLM_ENABLED"))
     llm_temperature: float = Field(default=0.7, alias="LLM_TEMPERATURE")
     llm_context_window: int = Field(default=4096, alias="LLM_CONTEXT_WINDOW")
     
-    # Session Configuration
-    session_dir: Path = Field(default=Path("./sessions"), alias="SESSION_DIR")
+    # Session Configuration (T100AI_DATA_DIR es el nombre documentado en Docker/README)
+    session_dir: Path = Field(default=Path("./sessions"),
+                              validation_alias=AliasChoices("SESSION_DIR", "T100AI_DATA_DIR"))
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = Field(default="INFO", alias="LOG_LEVEL")
     audit_log_enabled: bool = Field(default=True, alias="AUDIT_LOG_ENABLED")
     
