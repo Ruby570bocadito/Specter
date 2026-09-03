@@ -12,12 +12,16 @@ from wordlists.dictionaries import AttackDictionary
 
 
 class TestConfig:
-    def test_default_model_is_devstral(self):
+    def test_model_from_env(self):
         import os
-        os.environ["OLLAMA_MODEL"] = "devstral-small-2:latest"
+        os.environ["OLLAMA_MODEL"] = "mistral:7b"
         cfg = T100AIConfig()
-        assert cfg.ollama_model == "devstral-small-2:latest"
+        assert cfg.ollama_model == "mistral:7b"
         del os.environ["OLLAMA_MODEL"]
+
+    def test_default_model_is_real(self):
+        cfg = T100AIConfig()
+        assert cfg.ollama_model == "mistral:7b"
 
     def test_default_host(self):
         cfg = T100AIConfig()

@@ -53,7 +53,21 @@ class ChainOfCustody:
     """
 
     def __init__(self, secret: Optional[str] = None, engagement_id: str = ""):
-        self._secret = secret or os.environ.get("T100AI_AUDIT_SECRET", "change-me-in-production")
+        # Never fall back to a hardcoded secret: an attacker could forge signatures.
+        if secret:
+            self._secret = secret
+        elif os.environ.get("T100AI_AUDIT_SECRET"):
+            self._secret = os.environ["T100AI_AUDIT_SECRET"]
+        else:
+            import secrets as _secrets
+            import warnings as _warnings
+            self._secret = _secrets.token_hex(32)
+            _warnings.warn(
+                "T100AI_AUDIT_SECRET not set; using an ephemeral random secret. "
+                "Chain-of-custody signatures will NOT be verifiable across runs.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
         self._engagement_id = engagement_id
         self._chain: list[EvidenceItem] = []
         self._storage_dir = Path("evidence") / engagement_id
